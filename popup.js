@@ -6,9 +6,26 @@ var lankodtoname={1:"Stockholms län",10:"Blekinge län",12:"Skåne län",13:"Ha
 
 function getStatData(kommun,callback) {
 
-  // Official realestate statistics
-  var statUrl = 'http://www.maklarstatistik.se/usercontrols/statistik/LineChart.aspx?Months=24&LK='+kommunkod[kommun]+'117&Main='+encodeURIComponent(kommun)+'&Extra1=8888&Extra2=8888&Typ=Boratterkurvdata'
+data = getDataFromLocal(kommun);
+if(!data){
+  getDataOnline(kommun,function(data){
+    //Save data to local storage
+    alert("Från nätet");
+    callback(data);
+  });
+}else{
+  alert("LOcal");
+  callback(data);
+}
+}
 
+function getDataFromLocal(kommun){
+
+}
+function getDataOnline(kommun,callback){
+  // Official realestate statistics
+  var statUrl = 'http://www.maklarstatistik.se/usercontrols/statistik/LineChart.aspx?Months=24&LK='+kommunkod[kommun]+'&Main='+kommun+'&Extra1=8888&Extra2=8888&Typ=Boratterkurvdata'
+  console.log(statUrl);
   var req = new XMLHttpRequest();
 
   req.open('GET', statUrl);
@@ -57,7 +74,7 @@ function getStatData(kommun,callback) {
 function myAlert(){
     alert('hello world');
     // var data2 = getStatData('Österåker');
-    getStatData('Österåker', function(data) {
+    getStatData("Österåker", function(data) {
       console.log(data);
       var options = {
         // showArea: true,
