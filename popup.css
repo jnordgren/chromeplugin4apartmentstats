@@ -13,7 +13,7 @@ html { height: 356px; width: 700px;}
 body{ width: 356px;}
 
 
-
+/*Override the default colors for the graph*/
 .ct-series-a .ct-line,
 .ct-series-a .ct-point {
   stroke: blue;

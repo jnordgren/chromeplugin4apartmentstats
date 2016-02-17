@@ -1,22 +1,9 @@
-// /* Listen for messages */
-// chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
-//   alert("First: "+ document.getElementsByClassName("property__price")[0].innerText);
-//     /* If the received message has the expected format... */
-//     if (msg.text && (msg.text == "report_back")) {
-//         /* Call the specified callback, passing
-//            the web-pages DOM content as argument */
-//     sendResponse(document.getElementsByClassName("property__price")[0].innerText);
-//     }
-// });
-// var fromDOM = $('h1.name').text();
-console.log("LOG");
-document.body.bgColor='blue';
+
+
 getInfo();
 
 function getInfo(){
-  // console.log("---" + info);
-  document.body.bgColor='red';
-  console.log("LOL");
+
   var info = {model:"500"};
   info.color = "grey";
 
@@ -34,5 +21,3 @@ function getInfo(){
 
   return info;
 }
-// // alert("IM IN CONTENT.JS");
-// chrome.runtime.sendMessage({method:'setTitle',title:fromDOM});
