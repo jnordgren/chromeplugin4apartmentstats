@@ -21,6 +21,37 @@ function getStatData(kommun_name,callback) {
   openRequest.onsuccess = function(e) {
       console.log("Success!");
       db = e.target.result;
+
+      getDataFromLocal(id, function(res,need_updated){
+        if(need_updated){
+          console.log("Nu laddar vi från netet");
+          //Get kommun data
+          getMaklarDataWeb({id:id.kommunid, namn:id.kommun},function(data_kommun) {
+            /**
+            * TODO: All this crap with ids is nonsense we could rewrite and resuse the save function instead. do that.
+            */
+            var res = {
+              kommunid: "kommun_"+id.kommunid,
+              kommun: {meta: {id: id.kommunid, timestamp: Date(), kommun : data_kommun}}
+
+            };
+            //Get maklardata
+            getMaklarDataWeb({id:id.lanid, namn:id.lan},function(data_lan) {
+
+              res.lanid = "lan_id"+id.lanid;
+              res.lan = {meta: {id: id.lanid, timestamp: Date(), lan : data_lan}};
+
+              saveDataToLocal(res);
+              callback(res);
+            });
+
+          });
+        }else{
+          console.log("Vi har laddat från lokalt!");
+          console.log(res);
+          callback(res);
+        }
+      });
   }
   openRequest.onupgradeneeded = function(e) {
      console.log("Upgrading...");
@@ -39,44 +70,50 @@ function getStatData(kommun_name,callback) {
     console.log("Error");
     console.dir(e);
   }
-  var web_load = true;
-  //We have to use our local storage.
-  if(web_load){
-    //Get kommun data
-    getMaklarDataWeb({id:id.kommunid, namn:id.kommun},function(data_kommun) {
-      /**
-      * TODO: All this crap with ids is nonsense we could rewrite and resuse the save function instead. do that.
-      */
-      var res = {
-        kommunid: "kommun_"+id.kommunid,
-        kommun: {meta: {id: id.kommunid, timestamp: Date(), kommun : data_kommun}}
-
-      };
-      //Get maklardata
-      getMaklarDataWeb({id:id.lanid, namn:id.lan},function(data_lan) {
-
-        res.lanid = "lan_id"+id.lanid;
-        res.lan = {meta: {id: id.lanid, timestamp: Date(), lan : data_lan}};
-
-        console.log(res);
-        saveDataToLocal(res);
-        callback(res);
-      });
-
-    });
-  }
 
 }
 
-function getDataFromLocal(kommun){
+function getDataFromLocal(id,callback){
+  console.log("Nu kommer vi börja ladda");
+    console.log(id);
+  var transaction = db.transaction(["kommuner"],"readonly");
+  var store = transaction.objectStore("kommuner");
+
+  var request = store.get(id.kommunid);
+
+  request.onsuccess = function(e) {
+
+      var kommun_result = e.target.result;
+      if(kommun_result) {
+        var res = {
+          kommunid: "kommun_"+id.kommunid,
+          kommun: {meta: kommun_result}
+
+        };
+
+        var transaction = db.transaction(["lan"],"readonly");
+        var store = transaction.objectStore("lan");
+
+        var request = store.get(id.lanid);
+
+        request.onsuccess = function(e) {
+
+            var lan_result = e.target.result;
+            if(lan_result) {
+              res.lanid = "lan_id"+id.lanid;
+              res.lan = {meta:lan_result};
+              callback(res,false);
+            }
+        }
+      }
+  }
 
 }
 /*
 *Save data locally. possible we can redo this and use only one
 */
 function saveDataToLocal(data){
-  console.log("This i will save locally");
-  console.log(data);
+
   var transaction = db.transaction(["kommuner"],"readwrite");
   var store = transaction.objectStore("kommuner");
 
@@ -107,10 +144,10 @@ function saveDataToLocal(data){
   }
 }
 function getMaklarDataWeb(q,callback){
-  console.log(q);
+
   // Official realestate statistics
   var statUrl = 'http://www.maklarstatistik.se/usercontrols/statistik/LineChart.aspx?Months=24&LK='+q.id+'&Main='+q.namn+'&Extra1=8888&Extra2=8888&Typ=Boratterkurvdata'
-  console.log(statUrl);
+
   var req = new XMLHttpRequest();
 
   req.open('GET', statUrl);
