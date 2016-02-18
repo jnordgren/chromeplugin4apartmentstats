@@ -19,12 +19,12 @@ function getStatData(kommun_name,callback) {
 
   var openRequest = indexedDB.open("maklarstats",5);
   openRequest.onsuccess = function(e) {
-      console.log("Success!");
       db = e.target.result;
 
       getDataFromLocal(id, function(res,need_updated){
+        //If local data is bad or not avaible, download it instead.
         if(need_updated){
-          console.log("Nu laddar vi från netet");
+
           //Get kommun data
           getMaklarDataWeb({id:id.kommunid, namn:id.kommun},function(data_kommun) {
             /**
@@ -42,19 +42,19 @@ function getStatData(kommun_name,callback) {
               res.lan = {meta: {id: id.lanid, timestamp: Date(), lan : data_lan}};
 
               saveDataToLocal(res);
+
+              console.log("Web data"); //TODO; Remove mee!
               callback(res);
             });
 
           });
-        }else{
-          console.log("Vi har laddat från lokalt!");
-          console.log(res);
+        }else{ //Just use the local data
+          console.log("Local data"); //TODO; Remove mee!
           callback(res);
         }
       });
   }
   openRequest.onupgradeneeded = function(e) {
-     console.log("Upgrading...");
      var thisDB = e.target.result;
 
       if(!thisDB.objectStoreNames.contains("kommuner")) {
@@ -67,15 +67,14 @@ function getStatData(kommun_name,callback) {
       }
   }
   openRequest.onerror = function(e) {
-    console.log("Error");
+    console.log("Error: Cannot updated indexedDB database. (unable to cache data locally)");
     console.dir(e);
   }
 
 }
 
 function getDataFromLocal(id,callback){
-  console.log("Nu kommer vi börja ladda");
-    console.log(id);
+
   var transaction = db.transaction(["kommuner"],"readonly");
   var store = transaction.objectStore("kommuner");
 
@@ -85,6 +84,13 @@ function getDataFromLocal(id,callback){
 
       var kommun_result = e.target.result;
       if(kommun_result) {
+        //Check if data is older than 1 month
+        var tm_stmp = new Date(kommun_result.timestamp);
+        // var tm_stmp = new Date(2016, 00, 17, 15, 50, 20, 0);   //For testing.
+        var now = new Date();
+        if( (now.getMonth() - tm_stmp.getMonth() + (12 *(now.getYear() - tm_stmp.getYear())) ) >= 1 ){
+          callback(null,true);
+        }
         var res = {
           kommunid: "kommun_"+id.kommunid,
           kommun: {meta: kommun_result}
@@ -103,8 +109,12 @@ function getDataFromLocal(id,callback){
               res.lanid = "lan_id"+id.lanid;
               res.lan = {meta:lan_result};
               callback(res,false);
+            }else{
+              callback(null,true);
             }
         }
+      }else{
+        callback(null,true);
       }
   }
 
@@ -173,7 +183,7 @@ function getMaklarDataWeb(q,callback){
       data.labels.push(m[i].getAttribute('label'));
     }
     data.series.push(tmp);
-
+    console.log("Nu har vi laddat fra netet!");
     callback(data);
   };
   req.onerror = function() {
@@ -194,7 +204,7 @@ function getMaklarDataWeb(q,callback){
 function myAlert(){
 
     // var data2 = getStatData('Österåker');
-    getStatData("Österåker", function(data) {
+    getStatData("Järfälla", function(data) {
       console.log("--->");
       console.log(data);
       var options = {
