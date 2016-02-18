@@ -4,27 +4,112 @@ var lanskod={"Stockholms län":1,"Uppsala län":3,"Södermanlands län":4,"Öste
 var kommuntolan={114:1,115:1,117:1,120:1,123:1,125:1,126:1,127:1,128:1,136:1,138:1,139:1,140:1,160:1,162:1,163:1,180:1,181:1,182:1,183:1,184:1,186:1,187:1,188:1,191:1,192:1,305:3,319:3,330:3,331:3,360:3,380:3,381:3,382:3,428:4,461:4,480:4,481:4,482:4,483:4,484:4,486:4,488:4,509:5,512:5,513:5,560:5,561:5,562:5,563:5,580:5,581:5,582:5,583:5,584:5,586:5,604:6,617:6,642:6,643:6,662:6,665:6,680:6,682:6,683:6,684:6,685:6,686:6,687:6,760:7,761:7,763:7,764:7,765:7,767:7,780:7,781:7,821:8,834:8,840:8,860:8,861:8,862:8,880:8,881:8,882:8,883:8,884:8,885:8,980:9,1060:10,1080:10,1081:10,1082:10,1083:10,1214:12,1230:12,1231:12,1233:12,1256:12,1257:12,1260:12,1261:12,1262:12,1263:12,1264:12,1265:12,1266:12,1267:12,1270:12,1272:12,1273:12,1275:12,1276:12,1277:12,1278:12,1280:12,1281:12,1282:12,1283:12,1284:12,1285:12,1286:12,1287:12,1290:12,1291:12,1292:12,1293:12,1315:13,1380:13,1381:13,1382:13,1383:13,1384:13,1401:14,1402:14,1407:14,1415:14,1419:14,1421:14,1427:14,1430:14,1435:14,1438:14,1439:14,1440:14,1441:14,1442:14,1443:14,1444:14,1445:14,1446:14,1447:14,1452:14,1460:14,1461:14,1462:14,1463:14,1465:14,1466:14,1470:14,1471:14,1472:14,1473:14,1480:14,1481:14,1482:14,1484:14,1485:14,1486:14,1487:14,1488:14,1489:14,1490:14,1491:14,1492:14,1493:14,1494:14,1495:14,1496:14,1497:14,1498:14,1499:14,1715:17,1730:17,1737:17,1760:17,1761:17,1762:17,1763:17,1764:17,1765:17,1766:17,1780:17,1781:17,1782:17,1783:17,1784:17,1785:17,1814:18,1860:18,1861:18,1862:18,1863:18,1864:18,1880:18,1881:18,1882:18,1883:18,1884:18,1885:18,1904:19,1907:19,1960:19,1961:19,1962:19,1980:19,1981:19,1982:19,1983:19,1984:19,2021:20,2023:20,2026:20,2029:20,2031:20,2034:20,2039:20,2061:20,2062:20,2080:20,2081:20,2082:20,2083:20,2084:20,2085:20,2101:21,2104:21,2121:21,2132:21,2161:21,2180:21,2181:21,2182:21,2183:21,2184:21,2260:22,2262:22,2280:22,2281:22,2282:22,2283:22,2284:22,2303:23,2305:23,2309:23,2313:23,2321:23,2326:23,2361:23,2380:23,2401:24,2403:24,2404:24,2409:24,2417:24,2418:24,2421:24,2422:24,2425:24,2460:24,2462:24,2463:24,2480:24,2481:24,2482:24,2505:25,2506:25,2510:25,2513:25,2514:25,2518:25,2521:25,2523:25,2560:25,2580:25,2581:25,2582:25,2583:25,2584:25}
 var lankodtoname={1:"Stockholms län",10:"Blekinge län",12:"Skåne län",13:"Hallands län",14:"Västra Götalands län",17:"Värmlands län",18:"Örebro län",19:"Västmanlands län",20:"Dalarnas län",21:"Gävleborgs län",22:"Västernorrlands län",23:"Jämtlands län",24:"Västerbottens län",25:"Norrbottens län",3:"Uppsala län",4:"Södermanlands län",5:"Östergötlands län",6:"Jönköpings län",7:"Kronobergs län",8:"Kalmar län",9:"Gotlands län"};
 
-function getStatData(kommun,callback) {
+// Database for local storage
+var db;
 
-data = getDataFromLocal(kommun);
-if(!data){
-  getDataOnline(kommun,function(data){
-    //Save data to local storage
-    alert("Från nätet");
-    callback(data);
-  });
-}else{
-  alert("LOcal");
-  callback(data);
-}
+function getStatData(kommun_name,callback) {
+
+  // Set up a little variable that we simply can store important properties.
+  var id = {
+    kommun: kommun_name,
+    kommunid :kommunkod[kommun_name],
+    lanid : kommuntolan[kommunkod[kommun_name]],
+    lan : lankodtoname[kommuntolan[kommunkod[kommun_name]]]
+  };
+
+  var openRequest = indexedDB.open("maklarstats",5);
+  openRequest.onsuccess = function(e) {
+      console.log("Success!");
+      db = e.target.result;
+  }
+  openRequest.onupgradeneeded = function(e) {
+     console.log("Upgrading...");
+     var thisDB = e.target.result;
+
+      if(!thisDB.objectStoreNames.contains("kommuner")) {
+          thisDB.createObjectStore("kommuner");
+
+      }
+      if(!thisDB.objectStoreNames.contains("lan")) {
+          thisDB.createObjectStore("lan");
+
+      }
+  }
+  openRequest.onerror = function(e) {
+    console.log("Error");
+    console.dir(e);
+  }
+  var web_load = true;
+  //We have to use our local storage.
+  if(web_load){
+    //Get kommun data
+    getMaklarDataWeb({id:id.kommunid, namn:id.kommun},function(data_kommun) {
+      /**
+      * TODO: All this crap with ids is nonsense we could rewrite and resuse the save function instead. do that.
+      */
+      var res = {
+        kommunid: "kommun_"+id.kommunid,
+        kommun: {meta: {id: id.kommunid, timestamp: Date(), kommun : data_kommun}}
+
+      };
+      //Get maklardata
+      getMaklarDataWeb({id:id.lanid, namn:id.lan},function(data_lan) {
+
+        res.lanid = "lan_id"+id.lanid;
+        res.lan = {meta: {id: id.lanid, timestamp: Date(), lan : data_lan}};
+
+        console.log(res);
+        saveDataToLocal(res);
+        callback(res);
+      });
+
+    });
+  }
+
 }
 
 function getDataFromLocal(kommun){
 
 }
-function getDataOnline(kommun,callback){
+/*
+*Save data locally. possible we can redo this and use only one
+*/
+function saveDataToLocal(data){
+  console.log("This i will save locally");
+  console.log(data);
+  var transaction = db.transaction(["kommuner"],"readwrite");
+  var store = transaction.objectStore("kommuner");
+
+  //Perform the add
+  var request = store.put(data.kommun.meta,data.kommun.meta.id);
+
+  request.onerror = function(e) {
+      console.log("Error",e.target.error.name);
+      //some type of error handler
+  }
+
+  request.onsuccess = function(e) {
+      console.log("Woot! Did it");
+  }
+  var transaction = db.transaction(["lan"],"readwrite");
+  var store = transaction.objectStore("lan");
+
+  //Perform the add
+  var request = store.put(data.lan.meta,data.lan.meta.id);
+
+  request.onerror = function(e) {
+      console.log("Error",e.target.error.name);
+      //some type of error handler
+  }
+
+  request.onsuccess = function(e) {
+      console.log("Woot! Did it");
+  }
+}
+function getMaklarDataWeb(q,callback){
+  console.log(q);
   // Official realestate statistics
-  var statUrl = 'http://www.maklarstatistik.se/usercontrols/statistik/LineChart.aspx?Months=24&LK='+kommunkod[kommun]+'&Main='+kommun+'&Extra1=8888&Extra2=8888&Typ=Boratterkurvdata'
+  var statUrl = 'http://www.maklarstatistik.se/usercontrols/statistik/LineChart.aspx?Months=24&LK='+q.id+'&Main='+q.namn+'&Extra1=8888&Extra2=8888&Typ=Boratterkurvdata'
   console.log(statUrl);
   var req = new XMLHttpRequest();
 
@@ -52,9 +137,6 @@ function getDataOnline(kommun,callback){
     }
     data.series.push(tmp);
 
-
-    console.log(data);
-
     callback(data);
   };
   req.onerror = function() {
@@ -63,6 +145,7 @@ function getDataOnline(kommun,callback){
   };
   req.send();
 }
+
 // http://www.hemnet.se/salda/resultat/bbox?
 //
 // bbox=18.265941445547128%2C
@@ -72,19 +155,18 @@ function getDataOnline(kommun,callback){
 //
 // &search_key=36bc994990e7bbbef58f18e636b0e302091405c3
 function myAlert(){
-    alert('hello world');
+
     // var data2 = getStatData('Österåker');
     getStatData("Österåker", function(data) {
+      console.log("--->");
       console.log(data);
       var options = {
         // showArea: true,
         width: 600,
         height: 200
       };
-      // Create a new line chart object where as first parameter we pass in a selector
-      // that is resolving to our chart container element. The Second parameter
-      // is the actual data object.
-      new Chartist.Line('.ct-chart', data,options);
+      //This is not pretty ;)
+      new Chartist.Line('.ct-chart', {labels:data.kommun.meta.kommun.labels, series: [data.kommun.meta.kommun.series[0], data.lan.meta.lan.series[0]] },options);
     });
     // var data = {
     //   // A labels array that can contain any sort of values
