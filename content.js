@@ -1,13 +1,5 @@
 
 
-
-// chrome.webRequest.onCompleted.addListener(function(details) {
-//   /* Process the XHR response */
-//   alert("Vi fångade något");
-// }, {urls: ["<all_urls>"]});
-//
-
-
 /*Inject js to catch ajax data. kudos RobW st*/
 /*Source: https://stackoverflow.com/questions/9515704/building-a-chrome-extension-inject-code-in-a-page-using-a-content-script/9517879#9517879*/
 var s = document.createElement('script');
@@ -28,7 +20,7 @@ document.addEventListener("DOMSubtreeModified", function() {
     if( document.getElementById('special_l33t_inject_div').innerHTML.length > 10 ){
       // alert("Nu har vi skopat upp data");
       chrome.runtime.sendMessage({
-          type: 'closing_price',
+          type: 'closing_price_stats',
           request: document.getElementById('special_l33t_inject_div').innerHTML
       }, function(data) {
           // Received message from background, pass to page
