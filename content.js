@@ -17,8 +17,28 @@ s.onload = function() {
 };
 (document.head || document.documentElement).appendChild(s);
 
+//create a place where we can add info to DOMTree as a communication channel injected-> content->popup
+var inject_div = document.createElement('div');
+inject_div.id = 'special_l33t_inject_div';
+inject_div.cssText = 'visibility:hidden'; //dont show it.
+document.body.appendChild(inject_div);
 
-
+document.addEventListener("DOMSubtreeModified", function() {
+    // alert("DOMSubtreeModified fired!");
+    if( document.getElementById('special_l33t_inject_div').innerHTML.length > 10 ){
+      // alert("Nu har vi skopat upp data");
+      chrome.runtime.sendMessage({
+          type: 'closing_price',
+          request: document.getElementById('special_l33t_inject_div').innerHTML
+      }, function(data) {
+          // Received message from background, pass to page
+          var event = document.createEvent('Events');
+          event.initEvent(EVENT_REPLY, false, false);
+          transporter.setAttribute('result', JSON.stringify(data));
+          transporter.dispatchEvent(event);
+      });
+    }
+}, false);
 
 getInfo();
 
@@ -41,7 +61,7 @@ function getInfo(){
 
   chrome.runtime.sendMessage({
       type: 'object_info',
-      request: "closing_price"
+      request: "object_info"
   }, function(data) {
       // Received message from background, pass to page
       var event = document.createEvent('Events');

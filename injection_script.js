@@ -19,6 +19,7 @@
 
           //Here we have found what we were looking for.
           if(this.responseText.length > 4){ //How should we communicate this back to our thing? put it into dom?
+            document.getElementById('special_l33t_inject_div').innerHTML = this.responseText;
             // chrome.runtime.sendMessage({
             //     type: 'closing_price',
             //     request: "closing_price"
