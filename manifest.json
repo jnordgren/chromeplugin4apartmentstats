@@ -11,10 +11,18 @@
         "default_title": "Test Extension",
          "default_popup": "popup.html"
     },
-
+    "background": {
+       "scripts": ["background.js"],
+       "persistent": true
+     },
     "permissions": [
       "activeTab",
       "fileSystem",
-      "http://www.maklarstatistik.se/"
-    ]
+      "http://www.maklarstatistik.se/",
+      "<all_urls>",
+      "webRequest",
+      "webRequestBlocking"
+    ],
+    "web_accessible_resources": ["injection_script.js"]
+
 }
