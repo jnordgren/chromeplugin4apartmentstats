@@ -53,7 +53,7 @@ function getInfo(){
 
   chrome.runtime.sendMessage({
       type: 'object_info',
-      request: "object_info"
+      request: info
   }, function(data) {
       // Received message from background, pass to page
       var event = document.createEvent('Events');
