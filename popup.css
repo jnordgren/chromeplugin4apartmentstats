@@ -9,8 +9,8 @@ body {
   overflow: hidden;
   max-width: 400px;
 }
-html { height: 356px; width: 700px;}
-body{ width: 356px;}
+html { height: 800px; width: 700px;}
+body{ width: 700px;}
 
 
 /*Override the default colors for the graph*/

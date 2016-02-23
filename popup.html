@@ -4,17 +4,32 @@
   <head>
     <title>Getting Started Extension's Popup</title>
     <style>
-
-    </style>
-
-
+    body, html { margin:0; padding:0; height:100%;}
+    body { font-family:sans-serif; }
+    body * { font-weight:200;}
+    h1 { position:absolute; background:white; padding:10px;}
+  
+    .leaflet-container {
+      background: rgba(0,0,0,.8) !important;
+    }
+    h1 { position:absolute; background:black; color:white; padding:10px; font-weight:200; z-index:10000;}
+    #all-examples-info { position:absolute; background:white; font-size:16px; padding:20px; top:100px; width:350px; line-height:150%; border:1px solid rgba(0,0,0,.2);}
+  </style>
+    <script src="leaflet.js"></script>
+    <script src="heatmap.min.js"></script>
+    <script src="leaflet-heatmap.js"></script>
     <script src="popup.js"></script>
     <link rel="stylesheet"href="chartist.min.css">
     <link rel="stylesheet"href="popup.css">
+    <link rel="stylesheet" href="leaflet.css" />
 
   </head>
   <body>
     <script src="chartist.min.js"></script>
+
+
+
+
   <div class="ct-chart ct-perfect-fourth"></div>
 <ul class="ct-legend"><li class="ct-series-a">asd</li></ul>
 
@@ -27,5 +42,7 @@
     <b>pris:</b><span id="price"></span>
     <b>storlek:</b><span id="size"></span>
     <b>avgift:</b><span id="rent"></span>
+    <div class="heatmap" id="map" style="width: 600px; height: 400px;"></div>
+
   </body>
 </html>

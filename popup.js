@@ -202,7 +202,61 @@ function getMaklarDataWeb(q,callback){
 //
 // &search_key=36bc994990e7bbbef58f18e636b0e302091405c3
 function myAlert(){
+  /*BEGIN*/
+//   var map = L.map('map-canvas').setView([51.505, -0.09], 13);
+//
+// L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+// }).addTo(map);
 
+
+  // don't forget to include leaflet-heatmap.js
+  var testData = {
+    max:  100,
+    data: [{lat: 59.478482, lng:18.305368, count: 50},{lat: 59.474820, lng:18.326483, count: 30},
+    {lat: 59.476389, lng:18.330774, count: 50}]
+  };
+
+
+  var baseLayer = L.tileLayer(
+    'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution: '...',
+      maxZoom: 18
+    }
+  );
+
+  var cfg = {
+    // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+    // if scaleRadius is false it will be the constant radius used in pixels
+    "radius": 0.01,
+    "maxOpacity": .8,
+    "minOpacity": 0,
+    // scales the radius based on map zoom
+    "scaleRadius": true,
+    // if set to false the heatmap uses the global maximum for colorization
+    // if activated: uses the data maximum within the current map boundaries
+    //   (there will always be a red spot with useLocalExtremas true)
+    // "useLocalExtrema": true,
+    // which field name in your data represents the latitude - default "lat"
+    latField: 'lat',
+    // which field name in your data represents the longitude - default "lng"
+    lngField: 'lng',
+    // which field name in your data represents the data value - default "value"
+    valueField: 'count'
+  };
+
+
+  var heatmapLayer = new HeatmapOverlay(cfg);
+
+  var map = new L.Map('map', {
+    center: new L.LatLng(59.478482, 18.305368),
+    zoom: 10,
+    layers: [baseLayer, heatmapLayer]
+  });
+
+  heatmapLayer.setData(testData);
+
+  /*END*/
     // var data2 = getStatData('Österåker');
     getStatData("Järfälla", function(data) {
       console.log("--->");
@@ -272,5 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // document.getElementById('price').text = info[0].datalayer[2].price_per_m2;
         // document.getElementById('price').text = info[0].datalayer[2].street_address;
         // document.getElementById('price').text = info[0].datalayer[2].upcoming_open_houses;
+
     });
 });
