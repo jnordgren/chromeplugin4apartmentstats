@@ -201,7 +201,90 @@ function getMaklarDataWeb(q,callback){
 // 59.48261221598362
 //
 // &search_key=36bc994990e7bbbef58f18e636b0e302091405c3
+// function saveClosingPrices(){
+//   chrome.runtime.getBackgroundPage(function(bg) {
+//     alert("Vi hittade: " + bg.propSet);
+//     console.log(bg.propSet);
+//   });
+// }
+
+function normalizePrices(propData){
+  var sum = 0;
+  var max = 0;
+  var min = Number.MAX_VALUE;
+  for(var i = 0; i<propData.length; i++){
+    sum += parseFloat(propData[i].count);
+    max = Math.max(max,propData[i].count);
+    min = Math.min(min,propData[i].count);
+  }
+  max = max-min;
+  for(var i = 0; i<propData.length; i++){
+    // console.log(propData[i].count +"/" + max);
+    propData[i].count = Math.round( (propData[i].count / max)*100);
+  }
+  return propData;
+}
+function loadDataForHeatMap(callback,errorCallback){
+
+  var openRequest = indexedDB.open("closing_prices",2);
+
+  openRequest.onsuccess = function(e) {
+      db = e.target.result;
+
+      var transaction = db.transaction(["hemnet_closing_prices"], "readonly");
+      var objectStore = transaction.objectStore("hemnet_closing_prices");
+      var cursor = objectStore.openCursor();
+      var data = [];
+
+      cursor.onsuccess = function(e) {
+        var res = e.target.result;
+
+        if(res) {
+          var prop = {
+            lat:res.value.coordinate[0],
+            lng:res.value.coordinate[1],
+            count:res.value.price_per_area
+          }
+          if(Number.isInteger(prop.count)){
+            data.push(prop);
+          }
+
+
+          res.continue();
+        }else{
+            console.log(data.length);
+              callback(data);
+        }
+      }
+      // console.log("REading data" + data);
+      // console.log(data);
+
+
+  }
+  openRequest.onupgradeneeded = function(e) {
+    console.log("DB upgrade neede");
+    errorCallback("Fatal error local DB is inconsisten");
+    //  var thisDB = e.target.result;
+     //
+    //   if(!thisDB.objectStoreNames.contains("kommuner")) {
+    //       thisDB.createObjectStore("kommuner");
+     //
+    //   }
+    //   if(!thisDB.objectStoreNames.contains("lan")) {
+    //       thisDB.createObjectStore("lan");
+     //
+    //   }
+  }
+  openRequest.onerror = function(e) {
+    console.log("Error: Cannot updated indexedDB database. (unable to cache data locally)");
+    console.dir(e);
+    errorCallback("Fatal error local DB is inconsisten");
+  }
+
+}
 function myAlert(){
+
+
   /*BEGIN*/
 //   var map = L.map('map-canvas').setView([51.505, -0.09], 13);
 //
@@ -209,52 +292,62 @@ function myAlert(){
 //     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 // }).addTo(map);
 
+var baseLayer = L.tileLayer(
+  'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution: '...',
+    maxZoom: 18
+  }
+);
 
-  // don't forget to include leaflet-heatmap.js
-  var testData = {
-    max:  100,
-    data: [{lat: 59.478482, lng:18.305368, count: 50},{lat: 59.474820, lng:18.326483, count: 30},
-    {lat: 59.476389, lng:18.330774, count: 50}]
-  };
-
-
-  var baseLayer = L.tileLayer(
-    'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution: '...',
-      maxZoom: 18
-    }
-  );
-
-  var cfg = {
-    // radius should be small ONLY if scaleRadius is true (or small radius is intended)
-    // if scaleRadius is false it will be the constant radius used in pixels
-    "radius": 0.01,
-    "maxOpacity": .8,
-    "minOpacity": 0,
-    // scales the radius based on map zoom
-    "scaleRadius": true,
-    // if set to false the heatmap uses the global maximum for colorization
-    // if activated: uses the data maximum within the current map boundaries
-    //   (there will always be a red spot with useLocalExtremas true)
-    // "useLocalExtrema": true,
-    // which field name in your data represents the latitude - default "lat"
-    latField: 'lat',
-    // which field name in your data represents the longitude - default "lng"
-    lngField: 'lng',
-    // which field name in your data represents the data value - default "value"
-    valueField: 'count'
-  };
+var cfg = {
+  // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+  // if scaleRadius is false it will be the constant radius used in pixels
+  "radius": 0.001,
+  "maxOpacity": .8,
+  "minOpacity": 0,
+  // scales the radius based on map zoom
+  "scaleRadius": true,
+  // if set to false the heatmap uses the global maximum for colorization
+  // if activated: uses the data maximum within the current map boundaries
+  //   (there will always be a red spot with useLocalExtremas true)
+  // "useLocalExtrema": true,
+  // which field name in your data represents the latitude - default "lat"
+  latField: 'lat',
+  // which field name in your data represents the longitude - default "lng"
+  lngField: 'lng',
+  // which field name in your data represents the data value - default "value"
+  valueField: 'count'
+};
 
 
   var heatmapLayer = new HeatmapOverlay(cfg);
 
   var map = new L.Map('map', {
-    center: new L.LatLng(59.478482, 18.305368),
-    zoom: 10,
+    center: new L.LatLng(59.3672680524601,  17.986946487567586),
+    zoom: 14,
     layers: [baseLayer, heatmapLayer]
   });
 
-  heatmapLayer.setData(testData);
+  // don't forget to include leaflet-heatmap.js
+  var testData =
+  {
+      max:  100,
+      data: [{count: 38, lat: 59.3672680524601,lng: 17.986946487567586}, {count: 24,lat: 59.36160552503347,lng: 18.011214681031678}]
+    };
+  loadDataForHeatMap(function(res){
+      testData.data = normalizePrices(res)
+        heatmapLayer.setData(testData);
+  },function(message){
+    alert("Fatal DB error:" + message);
+  });
+  console.log(testData);
+  //
+
+
+
+
+
+
 
   /*END*/
     // var data2 = getStatData('Österåker');
@@ -312,14 +405,18 @@ function myAlert(){
 }
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('area_stat').addEventListener('click', myAlert);
+    // document.getElementById('closing_prices_button').addEventListener('click', saveClosingPrices);
+
+
     chrome.tabs.executeScript(null, {file: "content.js"}, function(info) {
 
 
         // var d = JSON.parse(info[0].datalayer);
-        document.body.bgColor= info[0].color;
-        document.getElementById('price').innerHTML = info[0].datalayer[2].property.price;
-        document.getElementById('rent').innerHTML = info[0].datalayer[2].property.borattavgift;
-        document.getElementById('size').innerHTML = info[0].datalayer[2].property.living_area;
+        // document.body.bgColor= info[0].color;
+        // document.getElementById('price').innerHTML = info[0].datalayer[2].property.price;
+        // document.getElementById('rent').innerHTML = info[0].datalayer[2].property.borattavgift;
+        // document.getElementById('size').innerHTML = info[0].datalayer[2].property.living_area;
+
         // document.getElementById('price').text = info[0].datalayer[2].driftkostnad;
         // document.getElementById('price').text = info[0].datalayer[2].living_area;
         // document.getElementById('price').text = info[0].datalayer[2].location;
