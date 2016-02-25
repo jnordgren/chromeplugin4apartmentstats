@@ -282,6 +282,14 @@ function loadDataForHeatMap(callback,errorCallback){
   }
 
 }
+
+function updateTooltip(x, y, value) {
+  // + 15 for distance to cursor
+  var transl = 'translate(' + (x + 15) + 'px, ' + (y + 15) + 'px)';
+  tooltip.style.webkitTransform = transl;
+  tooltip.innerHTML = value;
+}
+
 function myAlert(){
 
 
@@ -310,7 +318,7 @@ var cfg = {
   // if set to false the heatmap uses the global maximum for colorization
   // if activated: uses the data maximum within the current map boundaries
   //   (there will always be a red spot with useLocalExtremas true)
-  // "useLocalExtrema": true,
+  "useLocalExtrema": true,
   // which field name in your data represents the latitude - default "lat"
   latField: 'lat',
   // which field name in your data represents the longitude - default "lng"
@@ -332,11 +340,18 @@ var cfg = {
   var testData =
   {
       max:  100,
-      data: [{count: 38, lat: 59.3672680524601,lng: 17.986946487567586}, {count: 24,lat: 59.36160552503347,lng: 18.011214681031678}]
+      data: [{count: 70, lat: 59.3672680524601,lng: 17.986946487567586}, {count: 24,lat: 59.36160552503347,lng: 18.011214681031678},
+      {lat:59.364192, lng: 18.006227, count:24},
+      {lat:59.363164, lng:18.006613, count:25},
+      {lat:59.363164, lng:18.006613, count:25},
+      {lat:59.363164, lng:18.006613, count:25}
+    ]
     };
+    heatmapLayer.setData(testData);
+
   loadDataForHeatMap(function(res){
-      testData.data = normalizePrices(res)
-        heatmapLayer.setData(testData);
+      // testData.data = normalizePrices(res)
+        // heatmapLayer.setData(testData);
   },function(message){
     alert("Fatal DB error:" + message);
   });
@@ -344,7 +359,26 @@ var cfg = {
   //
 
 
-
+  // var demoWrapper = document.querySelector('.map-wrapper');
+  // var tooltip = document.querySelector('.toolt');
+  //
+  //
+  // demoWrapper.onmousemove = function(ev) {
+  //   // alert("MOUSE MOVED");
+  //   var x = ev.layerX;
+  //   var y = ev.layerY;
+  //     console.log(heatmapLayer);
+  //   // getValueAt gives us the value for a point p(x/y)
+  //   var value = heatmapLayer.getValueAt({ x: x, y: y});
+  //
+  //
+  //   tooltip.style.display = 'block';
+  //   updateTooltip(x, y, value);
+  // };
+  // // hide tooltip on mouseout
+  // demoWrapper.onmouseout = function() {
+  //   tooltip.style.display = 'none';
+  // };
 
 
 
@@ -403,6 +437,7 @@ var cfg = {
     // .html('<strong>' + val + '</strong>: ' + data.series[i] + '%')
     // .appendTo(legend);
 }
+
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('area_stat').addEventListener('click', myAlert);
     // document.getElementById('closing_prices_button').addEventListener('click', saveClosingPrices);
